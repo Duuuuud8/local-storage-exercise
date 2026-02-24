@@ -5,12 +5,30 @@ document.addEventListener("DOMContentLoaded", function ()
 	const colorForm = document.getElementById("color-form");
 	const colorInput = document.getElementById("color-input");
 
-	// TODO: Load the note color from the local storage.
-	let noteColor = null; // Stores the selected note color from the form.
-	// TODO: Load the note ID counter from the local storage.
-	let noteIdCounter = 0; // Counter for assigning unique IDs to new notes.
+	let noteColor = localStorage.getItem("noteColor") || "gray"; // Stores the selected note color from the form.
 
-	// TODO: Load the notes from the local storage.
+	let noteIdCounter = Number(localStorage.getItem("noteIdCounter")) || 0; // Counter for assigning unique IDs to new notes.
+
+	const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+
+	for (const savedNote of savedNotes)
+	{
+		const note = document.createElement("textarea");
+
+		// Restore the saved ID back onto the DOM element
+		note.setAttribute("data-note-id", savedNote.id.toString());
+
+		// Restore the saved text back into the textarea
+		note.value = savedNote.content;
+
+		// Make it look like a normal note
+		note.className = "note";
+		note.style.backgroundColor = noteColor;
+
+		// Put it on the page
+		noteContainer.appendChild(note);
+	}
+
 
 	function addNewNote ()
 	{
@@ -26,7 +44,11 @@ document.addEventListener("DOMContentLoaded", function ()
 
 		noteIdCounter++; // Increments the counter since the ID is used for this note.
 
-		// TODO: Add new note to the saved notes in the local storage.
+		const notes = JSON.parse(localStorage.getItem("notes")) || [];
+		notes.push({ id:id, content:content});
+		localStorage.setItem("notes", JSON.stringify(notes));
+
+		localStorage.setItem("noteIdCounter", noteIdCounter.toString());
 	}
 
 	colorForm.addEventListener("submit", function (event)
@@ -45,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function ()
 
 		noteColor = newColor; // Updates the stored note color with the new selection.
 
-		// TODO: Update the note color in the local storage.
+		localStorage.setItem("noteColor", noteColor);
 	});
 
 	newNoteButton.addEventListener("click", function ()
@@ -57,9 +79,14 @@ document.addEventListener("DOMContentLoaded", function ()
 	{
 		if (event.target.classList.contains("note"))
 		{
+			const idToDelete = Number(event.target.getAttribute("data-note-id"));
 			event.target.remove(); // Removes the clicked note.
 
-			// TODO: Delete the note from the saved notes in the local storage.
+			const notes = JSON.parse(localStorage.getItem("notes")) || [];
+			const updatedNotes = notes.filter(function (note) {
+				return note.id !== idToDelete;
+			});
+			localStorage.setItem("notes", JSON.stringify(updatedNotes));
 		}
 	});
 
@@ -67,7 +94,19 @@ document.addEventListener("DOMContentLoaded", function ()
 	{
 		if (event.target.classList.contains("note"))
 		{
-			// TODO: Update the note from the saved notes in the local storage.
+			const idToUpdate = Number(event.target.getAttribute("data-note-id"));
+			const newContent = event.target.value;
+
+			const notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+			for (const note of notes){
+				if(note.id === idToUpdate){
+					note.content = newContent;
+					break;
+				}
+			}
+
+			localStorage.setItem("notes", JSON.stringify(notes));
 		}
 	}, true);
 
